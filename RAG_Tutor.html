@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Tutor v1.0 — Personalized AI Learning Assistant — Dr. Kiavash Bahreini, FIU</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:#0f172a;color:#f1f5f9;overflow:hidden;height:100vh}
+input,textarea,button,select{font-family:inherit}
+button{cursor:pointer}button:disabled{cursor:default;opacity:.5}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+.screen{display:none;height:100vh}.screen.active{display:flex}
+
+/* ── LOGIN ── */
+#login-screen{align-items:center;justify-content:center;background:linear-gradient(135deg,#0f172a,#1e293b,#0f172a)}
+.login-box{width:420px;background:#1e293b;border-radius:16px;border:1px solid #334155;padding:40px 32px;box-shadow:0 25px 50px rgba(0,0,0,.5)}
+.login-box h1{color:#f1f5f9;font-size:22px;font-weight:700}.login-box .sub{color:#94a3b8;font-size:13px;margin-top:6px}.login-box .sub2{color:#64748b;font-size:11px;margin-top:2px}
+.tab-row{display:flex;gap:8px;margin:24px 0}
+.tab-btn{flex:1;padding:10px 0;border-radius:8px;border:none;font-weight:600;font-size:13px;transition:.2s}
+.tab-btn.on{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff}.tab-btn.off{background:#0f172a;color:#94a3b8}
+.li{width:100%;padding:12px 14px;margin-bottom:12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;font-size:14px;outline:none}
+.li:focus{border-color:#3b82f6}.li::placeholder{color:#475569}
+.lerr{color:#f87171;font-size:12px;text-align:center;margin-bottom:12px;min-height:16px}
+.lsub{width:100%;padding:13px 0;border-radius:10px;border:none;font-weight:700;font-size:15px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;box-shadow:0 4px 15px rgba(99,102,241,.3)}
+.lfoot{color:#475569;font-size:11px;text-align:center;margin-top:16px;line-height:1.5}
+
+/* ── API BANNER ── */
+.api-ban{background:#172554;border-bottom:1px solid #1e3a5f;padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.api-ban label{color:#60a5fa;font-size:11px;font-weight:600;white-space:nowrap}
+.api-ban input{flex:1;min-width:200px;padding:6px 10px;border-radius:6px;border:1px solid #1e3a5f;background:#0f172a;color:#f1f5f9;font-size:11px;font-family:'IBM Plex Mono',monospace;outline:none}
+.api-ban select{padding:5px 8px;border-radius:6px;border:1px solid #1e3a5f;background:#0f172a;color:#f1f5f9;font-size:11px;font-family:'IBM Plex Mono',monospace;outline:none;cursor:pointer}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:.3s}.dot.on{background:#22c55e;box-shadow:0 0 6px #22c55e80}.dot.off{background:#ef4444}
+.api-ban .hint{color:#475569;font-size:10px;white-space:nowrap}
+
+/* ── CHAT SCREEN ── */
+#chat-screen{flex-direction:row}
+.chat-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.chat-hdr{background:linear-gradient(135deg,#1e293b,#0f172a);border-bottom:1px solid #334155;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.chat-hdr h1{color:#f1f5f9;font-size:16px;font-weight:700}.chat-hdr h1 span{font-size:10px;color:#64748b;font-weight:400}
+.chat-hdr .info{color:#94a3b8;font-size:11px}
+.hbtns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.hb{padding:5px 12px;border-radius:7px;border:1px solid #334155;background:transparent;font-size:10px;font-weight:600;transition:.15s}
+.hb:hover{background:#1e293b}
+.hb.s-on{border-color:#f59e0b;background:rgba(245,158,11,.12);color:#f59e0b}.hb.s-off{color:#94a3b8}
+.hb.quiz{color:#22c55e}.hb.dash{color:#6366f1}.hb.clr{color:#ef4444}.hb.out{color:#94a3b8}
+.mbadge{font-size:9px;background:#22c55e20;color:#22c55e;padding:2px 7px;border-radius:6px;font-weight:500;margin-left:5px}
+
+/* ── STUDENT SIDEBAR ── */
+.sidebar{width:280px;background:#1e293b;border-left:1px solid #334155;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.sb-hdr{padding:16px;border-bottom:1px solid #334155;text-align:center}
+.sb-hdr .avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:20px;font-weight:700;color:#fff}
+.sb-hdr .sname{font-size:14px;font-weight:600}.sb-hdr .slevel{font-size:11px;margin-top:2px}
+.sb-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#334155;border-bottom:1px solid #334155}
+.sb-stat{background:#1e293b;padding:10px 4px;text-align:center}.sb-stat .n{font-size:18px;font-weight:700}.sb-stat .l{font-size:9px;color:#94a3b8;margin-top:2px}
+.sb-scroll{flex:1;overflow-y:auto;padding:12px}
+.sb-sec{margin-bottom:16px}.sb-sec h4{font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #334155}
+.tp-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;margin-bottom:4px;background:#0f172a;border:1px solid transparent;transition:.15s}
+.tp-item:hover{border-color:#334155}
+.tp-bar{flex:1;height:6px;background:#334155;border-radius:3px;overflow:hidden}.tp-fill{height:100%;border-radius:3px;transition:.4s}
+.tp-cnt{font-size:10px;color:#94a3b8;width:20px;text-align:right}
+.tp-name{font-size:12px;width:90px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-lvl{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:600}
+.rq-item{padding:6px 8px;border-radius:6px;background:#0f172a;margin-bottom:4px;font-size:11px;color:#94a3b8;border-left:2px solid #3b82f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.streak-bar{display:flex;gap:3px;margin-top:4px}.streak-day{width:12px;height:12px;border-radius:3px;border:1px solid #334155}
+
+/* ── CHAT MESSAGES ── */
+.chat-area{flex:1;overflow-y:auto;padding:16px 0}
+.msg-row{display:flex;padding:0 16px;margin-bottom:10px}.msg-row.user{justify-content:flex-end}.msg-row.bot{justify-content:flex-start}
+.msg-b{max-width:75%;padding:10px 14px;line-height:1.6;font-size:13px;white-space:pre-wrap;word-wrap:break-word}
+.msg-b.user{background:#1e3a5f;border:1px solid rgba(37,99,235,.25);border-radius:14px 14px 4px 14px;color:#e2e8f0}
+.msg-b.bot{background:#1e293b;border:1px solid #334155;border-radius:14px 14px 14px 4px;color:#e2e8f0}
+.msg-b.quiz{background:#1a2e1a;border:1px solid rgba(34,197,94,.25);border-radius:14px 14px 14px 4px}
+.msg-b.refl{background:#2e1a2e;border:1px solid rgba(168,85,247,.25);border-radius:14px 14px 14px 4px}
+.msg-b .mi{font-size:13px;margin-right:5px}.msg-t{display:inline-block;margin-top:6px;font-size:9px;color:#64748b;background:#0f172a;padding:1px 7px;border-radius:6px}
+.welcome{text-align:center;padding:50px 20px;color:#475569}
+.welcome .emoji{font-size:44px;margin-bottom:10px}.welcome h2{font-size:14px;font-weight:500;color:#94a3b8}
+.welcome p{font-size:11px;margin-top:6px;max-width:380px;margin-left:auto;margin-right:auto;line-height:1.6}
+.starters{display:flex;gap:6px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.stb{padding:7px 12px;border-radius:16px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:11px;transition:.15s}.stb:hover{border-color:#3b82f6;color:#f1f5f9}
+.input-bar{border-top:1px solid #1e293b;padding:10px 14px;background:#0f172a;display:flex;gap:8px;flex-shrink:0}
+.input-bar input{flex:1;padding:10px 14px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#f1f5f9;font-size:13px;outline:none}
+.input-bar input:focus{border-color:#3b82f6}.input-bar input::placeholder{color:#475569}
+.sbtn{padding:10px 20px;border-radius:10px;border:none;font-weight:700;font-size:13px;color:#fff;transition:.15s}
+.sbtn.on{background:linear-gradient(135deg,#3b82f6,#6366f1)}.sbtn.off{background:#334155}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}.thinking-b{animation:pulse 1.5s infinite}
+
+/* ── MODAL ── */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:999}
+.modal-bx{width:440px;background:#1e293b;border-radius:16px;border:1px solid #334155;padding:28px}
+.modal-bx h3{color:#f1f5f9;font-size:17px;margin-bottom:6px}.modal-bx p{color:#94a3b8;font-size:12px;margin-bottom:14px}
+.modal-bx textarea{width:100%;height:90px;padding:10px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#f1f5f9;font-size:13px;resize:vertical;outline:none}
+.modal-bts{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.msk{padding:9px 18px;border-radius:8px;border:1px solid #334155;background:transparent;color:#94a3b8;font-size:12px}
+.msub{padding:9px 20px;border-radius:8px;border:none;color:#fff;font-weight:600;font-size:12px}
+.msub.on{background:linear-gradient(135deg,#a855f7,#6366f1)}.msub.off{background:#334155}
+
+/* ── INSTRUCTOR DASHBOARD ── */
+#dash-screen{flex-direction:column;overflow-y:auto}
+.dw{max-width:1000px;margin:0 auto;padding:28px;width:100%}
+.dtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.dtop h1{font-size:22px;font-weight:700}.dtop .ds{color:#94a3b8;font-size:12px;margin-top:3px}
+.dbk{padding:7px 18px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:12px}
+.sgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px}
+.scard{background:#1e293b;border-radius:12px;border:1px solid #334155;padding:16px;text-align:center}
+.scard .si{font-size:24px}.scard .sn{font-size:24px;font-weight:700;margin-top:3px}.scard .sl{font-size:11px;color:#94a3b8;margin-top:2px}
+.dsec{background:#1e293b;border-radius:12px;border:1px solid #334155;padding:20px;margin-bottom:20px}
+.dsec h3{margin:0 0 14px;font-size:15px;font-weight:600}
+.brow{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.blbl{width:130px;font-size:12px;color:#94a3b8;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btrk{flex:1;height:18px;background:#0f172a;border-radius:5px;overflow:hidden}.bfil{height:100%;border-radius:5px;transition:.5s}
+.bcnt{font-size:12px;font-weight:600;width:28px;text-align:right}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:7px 10px;font-size:11px;color:#64748b;font-weight:600;border-bottom:1px solid #334155}
+td{padding:8px 10px;font-size:12px;border-bottom:1px solid rgba(30,41,59,.5)}
+tr:hover td{background:rgba(51,65,85,.2)}
+.rfc{padding:10px 14px;background:#0f172a;border-radius:8px;margin-bottom:6px;border-left:3px solid #a855f7}
+.rfc .rn{font-size:11px;color:#a855f7;font-weight:600;margin-bottom:3px}.rfc .rt{font-size:12px;color:#e2e8f0;line-height:1.5}
+.emp{color:#64748b;font-size:12px}
+
+/* ── STUDENT DASHBOARD ── */
+#sdash-screen{flex-direction:column;overflow-y:auto}
+.sdw{max-width:800px;margin:0 auto;padding:28px;width:100%}
+.sd-profile{display:flex;align-items:center;gap:20px;margin-bottom:28px}
+.sd-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;flex-shrink:0}
+.sd-info h2{font-size:20px;font-weight:700;margin-bottom:2px}.sd-info .sdl{font-size:12px}
+.sd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.sd-card{background:#1e293b;border-radius:12px;border:1px solid #334155;padding:16px;text-align:center}
+.sd-card .si{font-size:22px}.sd-card .sn{font-size:22px;font-weight:700;margin-top:3px}.sd-card .sl{font-size:11px;color:#94a3b8;margin-top:2px}
+.mastery-ring{position:relative;width:100px;height:100px;margin:0 auto 10px}
+.mastery-ring svg{transform:rotate(-90deg)}
+.mastery-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700}
+.tp-detail{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0f172a;border-radius:8px;margin-bottom:6px;border:1px solid #334155}
+.tp-detail .tp-nm{flex:1;font-size:13px;font-weight:500}
+.tp-detail .tp-bar2{flex:2;height:8px;background:#334155;border-radius:4px;overflow:hidden}
+.tp-detail .tp-fill2{height:100%;border-radius:4px}
+.tp-detail .tp-lv{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;width:80px;text-align:center}
+.tp-detail .tp-c{font-size:11px;color:#94a3b8;width:40px;text-align:right}
+.rh-item{display:flex;gap:10px;padding:8px 12px;background:#0f172a;border-radius:8px;margin-bottom:4px;border-left:3px solid #3b82f6;align-items:flex-start}
+.rh-item .rh-q{font-size:12px;color:#e2e8f0;flex:1}.rh-item .rh-tp{font-size:10px;color:#64748b;background:#1e293b;padding:1px 6px;border-radius:4px;flex-shrink:0}
+.rh-item .rh-time{font-size:10px;color:#475569;flex-shrink:0;white-space:nowrap}
+
+@media(max-width:768px){.sidebar{display:none}.sgrid{grid-template-columns:repeat(2,1fr)}.sd-grid{grid-template-columns:repeat(2,1fr)}.modal-bx{width:92%}}
+
+/* ── THEME SYSTEM ── */
+:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--txt:#f1f5f9;--txt2:#94a3b8;--txt3:#64748b;--acc:#3b82f6;--acc2:#6366f1;--bdr:#334155;--input-bg:#0f172a;--card-bg:#1e293b;--hover:#1e293b}
+[data-theme="navy"]{--bg:#0f172a;--bg2:#1e293b;--bg3:#334155;--txt:#f1f5f9;--txt2:#94a3b8;--txt3:#64748b;--acc:#3b82f6;--acc2:#6366f1;--bdr:#334155;--input-bg:#0f172a;--card-bg:#1e293b;--hover:#1e293b}
+[data-theme="ocean"]{--bg:#0c1929;--bg2:#132f4c;--bg3:#1a3f6b;--txt:#e3f2fd;--txt2:#90caf9;--txt3:#5c99d4;--acc:#29b6f6;--acc2:#0288d1;--bdr:#1a3f6b;--input-bg:#0c1929;--card-bg:#132f4c;--hover:#1a3f6b}
+[data-theme="emerald"]{--bg:#0b1a15;--bg2:#122b22;--bg3:#1a3d30;--txt:#e8f5e9;--txt2:#81c784;--txt3:#4e8c5e;--acc:#4caf50;--acc2:#2e7d32;--bdr:#1a3d30;--input-bg:#0b1a15;--card-bg:#122b22;--hover:#1a3d30}
+[data-theme="purple"]{--bg:#1a0a2e;--bg2:#2d1654;--bg3:#3f2070;--txt:#f3e5f5;--txt2:#ce93d8;--txt3:#9c5fb5;--acc:#ab47bc;--acc2:#7b1fa2;--bdr:#3f2070;--input-bg:#1a0a2e;--card-bg:#2d1654;--hover:#3f2070}
+[data-theme="rose"]{--bg:#1a0f14;--bg2:#2e1a24;--bg3:#462636;--txt:#fce4ec;--txt2:#f48fb1;--txt3:#c4607a;--acc:#ec407a;--acc2:#c2185b;--bdr:#462636;--input-bg:#1a0f14;--card-bg:#2e1a24;--hover:#462636}
+[data-theme="amber"]{--bg:#1a1408;--bg2:#2e2410;--bg3:#453619;--txt:#fff8e1;--txt2:#ffd54f;--txt3:#c9a13b;--acc:#ffb300;--acc2:#ff8f00;--bdr:#453619;--input-bg:#1a1408;--card-bg:#2e2410;--hover:#453619}
+[data-theme="light-blue"]{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e2e8f0;--txt:#1e293b;--txt2:#475569;--txt3:#94a3b8;--acc:#2563eb;--acc2:#4f46e5;--bdr:#cbd5e1;--input-bg:#ffffff;--card-bg:#ffffff;--hover:#f1f5f9}
+[data-theme="light-warm"]{--bg:#faf7f2;--bg2:#ffffff;--bg3:#f0ebe3;--txt:#2c1810;--txt2:#6b5744;--txt3:#a89580;--acc:#d97706;--acc2:#b45309;--bdr:#e0d5c5;--input-bg:#ffffff;--card-bg:#ffffff;--hover:#f5f0e8}
+[data-theme="light-mint"]{--bg:#f0faf5;--bg2:#ffffff;--bg3:#e0f2eb;--txt:#1a332b;--txt2:#3d6b5a;--txt3:#7da895;--acc:#059669;--acc2:#047857;--bdr:#c6e4d5;--input-bg:#ffffff;--card-bg:#ffffff;--hover:#edf7f2}
+body{background:var(--bg);color:var(--txt)}
+.login-box,.sidebar,.chat-hdr,.dsec,.scard,.sd-card,.modal-bx{background:var(--card-bg);border-color:var(--bdr)}
+.li,.login-input,.api-ban input,.input-bar input,.modal-bx textarea{background:var(--input-bg);color:var(--txt);border-color:var(--bdr)}
+.chat-area,.sb-scroll{background:var(--bg)}
+.api-ban{background:color-mix(in srgb,var(--acc) 10%,var(--bg))}
+.msg-b.bot,.msg-b.quiz,.msg-b.refl{background:var(--card-bg);border-color:var(--bdr);color:var(--txt)}
+.msg-b.user{background:color-mix(in srgb,var(--acc) 25%,var(--bg));border-color:color-mix(in srgb,var(--acc) 15%,transparent)}
+.tp-item,.tp-detail,.rq-item,.rh-item,.rfc,.msg-t,.sb-stats{background:var(--bg);border-color:var(--bdr)}
+.sb-stat,.btrk,.streak-day{background:var(--bg)}
+th{color:var(--txt3);border-color:var(--bdr)}td{color:var(--txt);border-color:color-mix(in srgb,var(--bdr) 50%,transparent)}
+.hb,.dbk,.stb,.msk{border-color:var(--bdr);color:var(--txt2)}.hb:hover,.stb:hover{background:var(--hover)}
+.chat-hdr .info,.sb-hdr .slevel,.emp,.welcome p{color:var(--txt2)}
+.lsub,.sbtn.on,.tab-btn.on,.login-submit,.msub.on{background:linear-gradient(135deg,var(--acc),var(--acc2))}
+.tab-btn.off{background:var(--bg);color:var(--txt2)}
+
+/* Theme bar */
+.theme-bar{position:fixed;top:0;left:0;right:0;height:28px;background:#000;display:flex;align-items:center;justify-content:center;gap:8px;z-index:1000;padding:0 16px}
+.theme-bar span{font-size:9px;color:#888;margin-right:4px}
+.theme-dot{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.15s}
+.theme-dot:hover{transform:scale(1.2)}.theme-dot.active{border-color:#fff}
+body{padding-top:28px;height:calc(100vh - 0px)}
+.screen{height:calc(100vh - 28px)}
+.modal-ov{top:28px}
+</style>
+</head>
+<body>
+
+<!-- Theme Bar -->
+<div class="theme-bar">
+<span>Theme:</span>
+<div class="theme-dot active" style="background:#1e293b" onclick="setTheme('navy')" title="Navy (Default)"></div>
+<div class="theme-dot" style="background:#132f4c" onclick="setTheme('ocean')" title="Ocean Blue"></div>
+<div class="theme-dot" style="background:#122b22" onclick="setTheme('emerald')" title="Emerald"></div>
+<div class="theme-dot" style="background:#2d1654" onclick="setTheme('purple')" title="Royal Purple"></div>
+<div class="theme-dot" style="background:#2e1a24" onclick="setTheme('rose')" title="Rose"></div>
+<div class="theme-dot" style="background:#2e2410" onclick="setTheme('amber')" title="Amber Gold"></div>
+<div class="theme-dot" style="background:linear-gradient(135deg,#e8eef4,#fff)" onclick="setTheme('light-blue')" title="Light Blue"></div>
+<div class="theme-dot" style="background:linear-gradient(135deg,#f0ebe3,#fff)" onclick="setTheme('light-warm')" title="Light Warm"></div>
+<div class="theme-dot" style="background:linear-gradient(135deg,#e0f2eb,#fff)" onclick="setTheme('light-mint')" title="Light Mint"></div>
+</div>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen" class="screen active">
+<div class="login-box">
+<div style="text-align:center;margin-bottom:28px">
+<div style="font-size:36px;margin-bottom:6px">🎓</div>
+<h1>RAG Tutor</h1>
+<div class="sub">Personalized AI Learning Assistant v1.0</div>
+<div class="sub2">Dr. Kiavash Bahreini · Florida International University</div>
+</div>
+<div class="tab-row">
+<button class="tab-btn on" id="tab-login" onclick="switchTab('login')">Sign In</button>
+<button class="tab-btn off" id="tab-register" onclick="switchTab('register')">Register</button>
+</div>
+<div id="reg-f" style="display:none"><input class="li" id="reg-fn" placeholder="Full Name"></div>
+<input class="li" id="l-user" placeholder="Username">
+<input class="li" id="l-pass" placeholder="Password" type="password">
+<div class="lerr" id="l-err"></div>
+<button class="lsub" id="l-btn" onclick="handleLogin()">Sign In →</button>
+<div class="lfoot">✨ Socratic Mode · Quiz Generation · Student & Instructor Dashboards · Persistent Data<br>Works for any course · Powered by Google Gemini</div>
+</div>
+</div>
+
+<!-- ═══ CHAT ═══ -->
+<div id="chat-screen" class="screen">
+<div class="chat-main">
+<!-- API -->
+<div class="api-ban">
+<div class="dot off" id="api-dot"></div>
+<label>API Key:</label>
+<input id="api-key" type="password" placeholder="AIza..." oninput="chkKey()">
+<label>Model:</label>
+<select id="mdl-sel">
+<option value="gemini-2.5-flash">2.5 Flash (stable)</option>
+<option value="gemini-2.5-flash-lite">2.5 Flash-Lite (budget)</option>
+<option value="gemini-2.5-pro">2.5 Pro (reasoning)</option>
+<option value="gemini-3-flash-preview">3.0 Flash (newest)</option>
+<option value="gemini-3.1-flash-lite-preview">3.1 Flash-Lite (high-vol)</option>
+<option value="gemini-3.1-flash-live-preview">3.1 Flash-Live (realtime)</option>
+</select>
+<button onclick="testAllModels()" style="padding:4px 10px;border-radius:5px;border:1px solid #1e3a5f;background:#0f172a;color:#60a5fa;font-size:10px;font-weight:600;cursor:pointer" title="Test which models work with your key">⚡ Test</button>
+<span class="hint" style="color:#475569;font-size:10px">aistudio.google.com/apikey</span>
+</div>
+<!-- Header -->
+<div class="chat-hdr">
+<div>
+<h1>🎓 RAG Tutor <span>v1.0</span> <span class="mbadge" id="mbadge"></span></h1>
+<div class="info" id="ch-info"></div>
+</div>
+<div class="hbtns">
+<button class="hb s-off" id="soc-btn" onclick="togSoc()">🏛️ Socratic</button>
+<button class="hb quiz" onclick="genQuiz()">📝 Quiz Me</button>
+<button class="hb" style="color:#60a5fa" onclick="showScreen('sdash')">👤 My Progress</button>
+<button class="hb dash" onclick="showScreen('dash')">📊 Instructor</button>
+<button class="hb clr" onclick="clearChat()">🗑</button>
+<button class="hb out" onclick="doLogout()">Logout</button>
+</div>
+</div>
+<!-- Chat -->
+<div class="chat-area" id="ch-area">
+<div class="welcome" id="welcome">
+<div class="emoji">🎓</div>
+<h2>Welcome to RAG Tutor v1.0</h2>
+<p>Ask any question about your course material.<br>
+Try <b style="color:#f59e0b">Socratic Mode</b> for guided discovery, <b style="color:#22c55e">Quiz Me</b> to test yourself, or <b style="color:#60a5fa">My Progress</b> to see your learning dashboard.</p>
+<div class="starters">
+<button class="stb" onclick="fillIn('Explain the key concepts from this week\'s lecture')">This week's concepts</button>
+<button class="stb" onclick="fillIn('Help me understand the difference between these two topics')">Compare topics</button>
+<button class="stb" onclick="fillIn('Can you give me a practice problem?')">Practice problem</button>
+<button class="stb" onclick="fillIn('What should I focus on for the exam?')">Exam prep</button>
+</div>
+</div>
+</div>
+<!-- Input -->
+<div class="input-bar">
+<input id="ch-in" placeholder="Ask any question about your course material...">
+<button class="sbtn off" id="snd-btn" onclick="sendMsg()">Send</button>
+</div>
+</div>
+<!-- Student Sidebar -->
+<div class="sidebar" id="sidebar">
+<div class="sb-hdr">
+<div class="avatar" id="sb-avatar"></div>
+<div class="sname" id="sb-name"></div>
+<div class="slevel" id="sb-level"></div>
+</div>
+<div class="sb-stats" id="sb-stats"></div>
+<div class="sb-scroll" id="sb-scroll"></div>
+</div>
+</div>
+
+<!-- ═══ STUDENT DASHBOARD ═══ -->
+<div id="sdash-screen" class="screen">
+<div class="sdw" id="sdash-c"></div>
+</div>
+
+<!-- ═══ INSTRUCTOR DASHBOARD ═══ -->
+<div id="dash-screen" class="screen">
+<div class="dw" id="dash-c"></div>
+</div>
+
+<!-- ═══ REFLECTION MODAL ═══ -->
+<div class="modal-ov" id="ref-modal" style="display:none">
+<div class="modal-bx">
+<h3>🪞 Session Reflection</h3>
+<p>Before you go — what did you learn today? What's still unclear?</p>
+<textarea id="ref-txt" placeholder="I learned that... / I'm still confused about..."></textarea>
+<div class="modal-bts">
+<button class="msk" onclick="finLogout()">Skip</button>
+<button class="msub off" id="ref-sub" onclick="subRef()">Submit Reflection</button>
+</div>
+</div>
+</div>
+
+<script>
+// ═══════ THEMES ═══════
+function setTheme(t){document.documentElement.setAttribute("data-theme",t);localStorage.setItem("ragtutor_theme",t);document.querySelectorAll(".theme-dot").forEach(d=>d.classList.remove("active"));document.querySelector(`.theme-dot[onclick*="${t}"]`)?.classList.add("active")}
+(function(){const t=localStorage.getItem("ragtutor_theme")||"navy";setTheme(t)})();
+
+// ═══════ STATE ═══════
+const P="ragtutor_";
+let S={user:null,students:{},chats:{},quiz:{},refs:{},soc:false,qc:0,busy:false,tab:"login"};
+const LV=["Beginner","Developing","Intermediate","Advanced","Expert"];
+const LC=["#94a3b8","#60a5fa","#34d399","#a78bfa","#f59e0b"];
+
+// ═══════ STORAGE ═══════
+function sv(k,d){try{localStorage.setItem(P+k,JSON.stringify(d))}catch(e){}}
+function ld(k){try{return JSON.parse(localStorage.getItem(P+k))}catch{return null}}
+function ldAll(){S.students=ld("stu")||{};S.chats=ld("ch")||{};S.quiz=ld("qz")||{};S.refs=ld("rf")||{}}
+function svAll(){sv("stu",S.students);sv("ch",S.chats);sv("qz",S.quiz);sv("rf",S.refs)}
+
+// ═══════ HELPERS ═══════
+function exTopic(q){
+  const stop=new Set(["what","how","why","when","where","which","who","is","are","was","were","do","does","did","can","could","would","should","the","a","an","in","on","at","to","for","of","with","and","or","but","not","this","that","these","those","it","its","my","me","i","you","your","we","our","they","their","about","from","by","as","be","been","have","has","had","will","may","might","must","need","help","explain","describe","define","tell","give","show","make","please","example","difference","between","compare","understand","mean","work","use","know","think","some","more","very","also","just","like","really","much","way","get","got","any","each","most","other","than","then","into","over","such","only","take","come","made","after","back","many","well","good","new","used","first","last","long","great","little","own","old","right","big","high","three","four","five","two","one"]);
+  const l=q.toLowerCase().replace(/[^a-z0-9\s]/g,"");
+  const words=l.split(/\s+/).filter(w=>w.length>2&&!stop.has(w));
+  // Try 2-word phrases
+  for(let i=0;i<words.length-1;i++){
+    return (words[i].charAt(0).toUpperCase()+words[i].slice(1))+" "+(words[i+1].charAt(0).toUpperCase()+words[i+1].slice(1));
+  }
+  if(words.length>0)return words[0].charAt(0).toUpperCase()+words[0].slice(1);
+  return"General";
+}
+function mIdx(c){return c>=10?4:c>=7?3:c>=4?2:c>=2?1:0}
+function uTopics(u){const t={};(S.chats[u||S.user]||[]).filter(m=>m.topic).forEach(m=>{t[m.topic]=(t[m.topic]||0)+1});return t}
+function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function overallLevel(topics){const vals=Object.values(topics);if(!vals.length)return 0;const avg=vals.reduce((a,b)=>a+b,0)/vals.length;return mIdx(avg)}
+function timeAgo(ts){const d=Date.now()-ts,m=Math.floor(d/60000);if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.floor(m/60);if(h<24)return h+"h ago";return Math.floor(h/24)+"d ago"}
+
+// ═══════ GEMINI API ═══════
+const ALL_MODELS=["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-3-flash-preview","gemini-3.1-flash-lite-preview","gemini-3.1-flash-live-preview"];
+
+async function tryModel(key,mdl,sys,msg){
+  const url=`https://generativelanguage.googleapis.com/v1beta/models/${mdl}:generateContent?key=${key}`;
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system_instruction:{parts:[{text:sys}]},contents:[{parts:[{text:msg}]}],generationConfig:{temperature:0.7,maxOutputTokens:4096}})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw{status:r.status,msg:e.error?.message||`HTTP ${r.status}`}}
+  const d=await r.json();return d.candidates?.[0]?.content?.parts?.map(p=>p.text).join("\n")||"No response.";
+}
+
+async function callAI(sys,msg){
+  const key=document.getElementById("api-key").value.trim();
+  if(!key)return"⚠️ Please paste your Gemini API key in the blue banner above.\n\nGet a free key at: https://aistudio.google.com/apikey";
+  const sel=document.getElementById("mdl-sel");
+  const primary=sel.value;
+  // Try primary model first
+  try{const r=await tryModel(key,primary,sys,msg);return r}catch(e){
+    if(e.status===429||e.msg?.toLowerCase().includes("quota")){
+      // Auto-fallback: try other models
+      const others=ALL_MODELS.filter(m=>m!==primary);
+      for(const mdl of others){
+        try{const r=await tryModel(key,mdl,sys,msg);
+          // Success! Switch dropdown to working model
+          sel.value=mdl;updBadge();
+          return`[Auto-switched to ${mdl}]\n\n${r}`;
+        }catch(e2){continue}
+      }
+      return"⚠️ All models quota exceeded. Please wait a few minutes or create a new API key at aistudio.google.com/apikey";
+    }
+    return`⚠️ Gemini Error (${primary}): ${e.msg}`;
+  }
+}
+
+async function testAllModels(){
+  const key=document.getElementById("api-key").value.trim();
+  if(!key){alert("Paste your API key first");return}
+  const results=[];
+  for(const mdl of ALL_MODELS){
+    try{await tryModel(key,mdl,"Say OK","test");results.push(`✅ ${mdl}`)}
+    catch(e){results.push(`❌ ${mdl}: ${e.msg?.substring(0,40)||"failed"}`)}
+  }
+  alert("Model Availability:\n\n"+results.join("\n"));
+}
+
+// ═══════ SCREENS ═══════
+function showScreen(n){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById(n+"-screen").classList.add("active");if(n==="dash")renderInsDash();if(n==="sdash")renderStuDash();if(n==="chat"){refreshChat();refreshSidebar()}}
+
+// ═══════ LOGIN ═══════
+function switchTab(m){S.tab=m;document.getElementById("tab-login").className="tab-btn "+(m==="login"?"on":"off");document.getElementById("tab-register").className="tab-btn "+(m==="register"?"on":"off");document.getElementById("reg-f").style.display=m==="register"?"block":"none";document.getElementById("l-btn").textContent=m==="login"?"Sign In →":"Create Account →";document.getElementById("l-err").textContent=""}
+function handleLogin(){
+  const u=document.getElementById("l-user").value.trim(),p=document.getElementById("l-pass").value.trim(),f=document.getElementById("reg-fn").value.trim(),err=document.getElementById("l-err");
+  if(!u||!p){err.textContent="All fields required";return}
+  if(S.tab==="register"){if(!f){err.textContent="Full name required";return}if(S.students[u]){err.textContent="Username exists";return}S.students[u]={pw:p,fn:f,ts:Date.now()};svAll()}
+  else{const s=S.students[u];if(!s||s.pw!==p){err.textContent="Invalid credentials";return}}
+  S.user=u;S.qc=0;S.soc=false;showScreen("chat")
+}
+
+// ═══════ API KEY ═══════
+function chkKey(){const k=document.getElementById("api-key").value.trim();document.getElementById("api-dot").className="dot "+(k.startsWith("AIza")?"on":"off");updBadge()}
+function updBadge(){const s=document.getElementById("mdl-sel"),b=document.getElementById("mbadge");if(s&&b)b.textContent=s.options[s.selectedIndex].text}
+
+// ═══════ SIDEBAR ═══════
+function refreshSidebar(){
+  const info=S.students[S.user],topics=uTopics(),msgs=S.chats[S.user]||[];
+  const qCnt=msgs.filter(m=>m.role==="user").length,tCnt=Object.keys(topics).length;
+  const oLvl=overallLevel(topics);
+  document.getElementById("sb-avatar").textContent=(info?.fn||S.user).charAt(0).toUpperCase();
+  document.getElementById("sb-name").textContent=info?.fn||S.user;
+  document.getElementById("sb-level").innerHTML=`<span style="color:${LC[oLvl]}">${LV[oLvl]}</span> · ${tCnt} topics`;
+  document.getElementById("sb-stats").innerHTML=[
+    {n:qCnt,l:"Questions",c:"#3b82f6"},{n:tCnt,l:"Topics",c:"#22c55e"},{n:(S.quiz[S.user]||[]).length,l:"Quizzes",c:"#f59e0b"}
+  ].map(s=>`<div class="sb-stat"><div class="n" style="color:${s.c}">${s.n}</div><div class="l">${s.l}</div></div>`).join("");
+
+  // Topics with mastery bars
+  const sorted=Object.entries(topics).sort((a,b)=>b[1]-a[1]);
+  const maxC=sorted[0]?sorted[0][1]:1;
+  let html='<div class="sb-sec"><h4>📚 Topic Mastery</h4>';
+  if(!sorted.length)html+='<p style="font-size:11px;color:#475569">Ask questions to track topics</p>';
+  else sorted.forEach(([t,c])=>{
+    const lv=mIdx(c);
+    html+=`<div class="tp-item"><span class="tp-name">${esc(t)}</span><div class="tp-bar"><div class="tp-fill" style="width:${(c/maxC)*100}%;background:${LC[lv]}"></div></div><span class="tp-lvl" style="background:${LC[lv]}20;color:${LC[lv]}">${LV[lv]}</span></div>`;
+  });
+  html+='</div>';
+
+  // Recent questions
+  const recent=msgs.filter(m=>m.role==="user").slice(-8).reverse();
+  html+='<div class="sb-sec"><h4>💬 Recent Questions</h4>';
+  if(!recent.length)html+='<p style="font-size:11px;color:#475569">No questions yet</p>';
+  else recent.forEach(m=>{html+=`<div class="rq-item" title="${esc(m.content)}">${esc(m.content.substring(0,50))}${m.content.length>50?"...":""}</div>`});
+  html+='</div>';
+
+  // Learning streak (last 7 days)
+  html+='<div class="sb-sec"><h4>🔥 Activity (7 days)</h4><div class="streak-bar">';
+  const now=Date.now();
+  for(let i=6;i>=0;i--){
+    const dayStart=new Date(now-i*86400000).setHours(0,0,0,0);
+    const dayEnd=dayStart+86400000;
+    const cnt=msgs.filter(m=>m.ts>=dayStart&&m.ts<dayEnd).length;
+    const col=cnt===0?"#1e293b":cnt<3?"#334155":cnt<6?"#3b82f6":"#22c55e";
+    const dayName=new Date(dayStart).toLocaleDateString("en",{weekday:"short"}).charAt(0);
+    html+=`<div style="text-align:center"><div class="streak-day" style="background:${col}" title="${cnt} messages"></div><div style="font-size:8px;color:#475569;margin-top:2px">${dayName}</div></div>`;
+  }
+  html+='</div></div>';
+  document.getElementById("sb-scroll").innerHTML=html;
+}
+
+// ═══════ CHAT ═══════
+function refreshChat(){
+  const info=S.students[S.user],topics=uTopics();
+  document.getElementById("ch-info").textContent=`Hello, ${info?.fn||S.user} · ${Object.keys(topics).length} topics explored`;
+  const msgs=S.chats[S.user]||[];
+  document.getElementById("welcome").style.display=msgs.length===0?"block":"none";
+  const area=document.getElementById("ch-area");
+  area.querySelectorAll(".msg-row,.thinking-row").forEach(el=>el.remove());
+  msgs.forEach(m=>addDOM(m));area.scrollTop=area.scrollHeight;
+  refreshSidebar();updBadge();
+}
+function addDOM(m){
+  const area=document.getElementById("ch-area");const row=document.createElement("div");
+  row.className="msg-row "+(m.role==="user"?"user":"bot");
+  const bc=m.role==="user"?"user":(m.type==="quiz"?"quiz":(m.type==="refl"?"refl":"bot"));
+  const ic=m.role==="user"?"":(m.type==="quiz"?'<span class="mi">📝</span>':(m.type==="refl"?'<span class="mi">🪞</span>':'<span class="mi">🎓</span>'));
+  const tp=m.topic?`<div><span class="msg-t">${esc(m.topic)}</span></div>`:"";
+  row.innerHTML=`<div class="msg-b ${bc}">${ic}${esc(m.content)}${tp}</div>`;
+  area.appendChild(row);area.scrollTop=area.scrollHeight;
+}
+function showThink(){const a=document.getElementById("ch-area"),d=document.createElement("div");d.className="msg-row bot thinking-row";d.id="think";d.innerHTML='<div class="msg-b bot thinking-b"><span class="mi">🎓</span>Thinking...</div>';a.appendChild(d);a.scrollTop=a.scrollHeight}
+function hideThink(){const e=document.getElementById("think");if(e)e.remove()}
+function fillIn(t){document.getElementById("ch-in").value=t;document.getElementById("ch-in").focus();updSnd()}
+function updSnd(){const v=document.getElementById("ch-in").value.trim();document.getElementById("snd-btn").className="sbtn "+(v&&!S.busy?"on":"off")}
+
+// ═══════ SEND ═══════
+async function sendMsg(){
+  const inp=document.getElementById("ch-in"),q=inp.value.trim();if(!q||S.busy)return;
+  inp.value="";updSnd();S.busy=true;document.getElementById("welcome").style.display="none";
+  const topic=exTopic(q),um={role:"user",content:q,topic,ts:Date.now()};
+  if(!S.chats[S.user])S.chats[S.user]=[];S.chats[S.user].push(um);addDOM(um);showThink();
+  const topics=uTopics(),tSum=Object.entries(topics).map(([t,c])=>`${t}:${c}q(${LV[mIdx(c)]})`).join(", "),rec=S.chats[S.user].filter(m=>m.role==="user").slice(-5).map(m=>m.content).join("; "),nm=S.students[S.user]?.fn||S.user;
+  let sys;
+  if(S.soc){sys=`You are "RAG Tutor", a Socratic AI tutor created by Dr. Kiavash Bahreini at Florida International University.\n\nSOCRATIC MODE ON — NEVER give direct answers:\n1. Ask guiding questions to help the student discover the answer\n2. Build on partial understanding with follow-up questions\n3. Use analogies and examples to guide thinking\n4. Only confirm correct reasoning — do not provide it\n\nStudent: ${nm}\nTopics studied so far: ${tSum||"None yet"}\nRecent questions: ${rec||"First question"}\n\nBe encouraging but firm. Guide, don't tell. Adapt to whatever subject the student is asking about.`}
+  else{sys=`You are "RAG Tutor", a friendly and knowledgeable AI tutor created by Dr. Kiavash Bahreini at Florida International University.\n\nProvide clear, accurate, and well-structured explanations. Use examples, analogies, and code snippets where appropriate. Adapt your language and depth to the student's level.\n\nStudent: ${nm}\nTopics studied: ${tSum||"None yet"}\nRecent questions: ${rec||"First session"}\nCurrent mastery for "${topic}": ${LV[mIdx(topics[topic]||0)]}\n\nAdapt depth to their demonstrated level. You can teach any subject — respond based on what the student asks about.`}
+  const resp=await callAI(sys,q);hideThink();
+  const bm={role:"assistant",content:resp,topic,ts:Date.now()};S.chats[S.user].push(bm);addDOM(bm);svAll();
+  S.qc++;S.busy=false;updSnd();refreshSidebar();
+}
+
+// ═══════ SOCRATIC ═══════
+function togSoc(){S.soc=!S.soc;const b=document.getElementById("soc-btn");b.className="hb "+(S.soc?"s-on":"s-off");b.textContent=S.soc?"🏛️ Socratic ON":"🏛️ Socratic";document.getElementById("ch-in").placeholder=S.soc?"Socratic mode — I'll guide you, not tell you...":"Ask any question about your course material..."}
+
+// ═══════ QUIZ ═══════
+async function genQuiz(){if(S.busy)return;S.busy=true;showThink();
+  const topics=uTopics(),top=Object.entries(topics).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t])=>t),qt=top[0]||"the student's course material";
+  const sys=`Generate exactly 3 multiple-choice quiz questions about "${qt}". Format:\n\nQ1: [question]\nA) ...\nB) ...\nC) ...\nD) ...\nAnswer: [letter]\nExplanation: [brief]\n\nAdapt difficulty to intermediate level. Include relevant examples, diagrams in text, or code snippets if the topic calls for it.`;
+  const r=await callAI(sys,`Quiz on ${qt}`);hideThink();
+  const qm={role:"assistant",content:r,type:"quiz",topic:qt,ts:Date.now()};
+  if(!S.chats[S.user])S.chats[S.user]=[];S.chats[S.user].push(qm);addDOM(qm);
+  if(!S.quiz[S.user])S.quiz[S.user]=[];S.quiz[S.user].push({topic:qt,ts:Date.now()});
+  svAll();S.busy=false;updSnd();refreshSidebar();
+}
+
+// ═══════ CLEAR / LOGOUT ═══════
+function clearChat(){if(!confirm("Clear chat history? Dashboard data is kept."))return;if(S.user&&S.chats[S.user]){S.chats[S.user]=[];svAll()}refreshChat()}
+function doLogout(){if(S.qc>=3){document.getElementById("ref-modal").style.display="flex";document.getElementById("ref-txt").value="";document.getElementById("ref-sub").className="msub off"}else finLogout()}
+function subRef(){const t=document.getElementById("ref-txt").value.trim();if(!t)return;if(!S.refs[S.user])S.refs[S.user]=[];S.refs[S.user].push({text:t,ts:Date.now()});
+  const rm={role:"assistant",content:`🪞 Reflection saved!\n\n"${t}"\n\nGreat self-awareness — this helps track your learning.`,type:"refl",ts:Date.now()};
+  if(!S.chats[S.user])S.chats[S.user]=[];S.chats[S.user].push(rm);svAll();document.getElementById("ref-modal").style.display="none";finLogout()}
+function finLogout(){document.getElementById("ref-modal").style.display="none";S.user=null;S.qc=0;S.soc=false;["l-user","l-pass","reg-fn"].forEach(id=>document.getElementById(id).value="");document.getElementById("l-err").textContent="";switchTab("login");showScreen("login")}
+
+// ═══════ STUDENT DASHBOARD ═══════
+function renderStuDash(){
+  const w=document.getElementById("sdash-c"),info=S.students[S.user],topics=uTopics(),msgs=S.chats[S.user]||[];
+  const qCnt=msgs.filter(m=>m.role==="user").length,tCnt=Object.keys(topics).length,qzCnt=(S.quiz[S.user]||[]).length,rfCnt=(S.refs[S.user]||[]).length;
+  const oLvl=overallLevel(topics),sorted=Object.entries(topics).sort((a,b)=>b[1]-a[1]),maxC=sorted[0]?sorted[0][1]:1;
+  const totalMastery=sorted.length?Math.round((sorted.reduce((s,[,c])=>s+mIdx(c),0)/(sorted.length*4))*100):0;
+
+  let h=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+    <div class="sd-profile"><div class="sd-av">${(info?.fn||S.user).charAt(0).toUpperCase()}</div>
+    <div class="sd-info"><h2>${esc(info?.fn||S.user)}</h2><div class="sdl" style="color:${LC[oLvl]}">Overall: ${LV[oLvl]} · Member since ${new Date(info?.ts||Date.now()).toLocaleDateString()}</div></div></div>
+    <button class="dbk" onclick="showScreen('chat')">← Back to Chat</button></div>`;
+
+  // Stats
+  h+=`<div class="sd-grid">
+    ${[{n:qCnt,l:"Questions",c:"#3b82f6",i:"💬"},{n:tCnt,l:"Topics",c:"#22c55e",i:"📚"},{n:qzCnt,l:"Quizzes",c:"#f59e0b",i:"📝"},{n:rfCnt,l:"Reflections",c:"#a855f7",i:"🪞"}].map(s=>`<div class="sd-card"><div class="si">${s.i}</div><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`).join("")}</div>`;
+
+  // Mastery ring + Topic details
+  h+=`<div style="display:grid;grid-template-columns:200px 1fr;gap:20px;margin-bottom:20px">`;
+  h+=`<div class="dsec" style="text-align:center"><h3>Overall Mastery</h3>
+    <div class="mastery-ring"><svg width="100" height="100"><circle cx="50" cy="50" r="42" fill="none" stroke="#334155" stroke-width="8"/><circle cx="50" cy="50" r="42" fill="none" stroke="${LC[oLvl]}" stroke-width="8" stroke-dasharray="${totalMastery*2.64} ${264-totalMastery*2.64}" stroke-linecap="round"/></svg>
+    <div class="mastery-pct" style="color:${LC[oLvl]}">${totalMastery}%</div></div>
+    <div style="font-size:13px;color:${LC[oLvl]};font-weight:600">${LV[oLvl]}</div>
+    <div style="font-size:11px;color:#64748b;margin-top:4px">${tCnt} topics · ${qCnt} questions</div></div>`;
+
+  h+=`<div class="dsec"><h3>📚 Topic Breakdown</h3>`;
+  if(!sorted.length)h+='<p class="emp">Start asking questions to build your topic map</p>';
+  else sorted.forEach(([t,c])=>{
+    const lv=mIdx(c);
+    h+=`<div class="tp-detail"><span class="tp-nm">${esc(t)}</span><div class="tp-bar2"><div class="tp-fill2" style="width:${(c/maxC)*100}%;background:${LC[lv]}"></div></div><span class="tp-lv" style="background:${LC[lv]}20;color:${LC[lv]}">${LV[lv]}</span><span class="tp-c">${c}×</span></div>`;
+  });
+  h+='</div></div>';
+
+  // Recent History
+  h+=`<div class="dsec"><h3>💬 Conversation History</h3>`;
+  const recent=msgs.filter(m=>m.role==="user").slice(-15).reverse();
+  if(!recent.length)h+='<p class="emp">No conversations yet</p>';
+  else recent.forEach(m=>{
+    h+=`<div class="rh-item"><span class="rh-q">${esc(m.content.substring(0,80))}${m.content.length>80?"...":""}</span><span class="rh-tp">${m.topic||""}</span><span class="rh-time">${timeAgo(m.ts)}</span></div>`;
+  });
+  h+='</div>';
+
+  // Reflections
+  const refs=S.refs[S.user]||[];
+  h+=`<div class="dsec"><h3>🪞 My Reflections</h3>`;
+  if(!refs.length)h+='<p class="emp">Complete 3+ questions in a session to unlock reflections</p>';
+  else refs.slice().reverse().slice(0,5).forEach(r=>{
+    h+=`<div class="rfc"><div class="rn">${new Date(r.ts).toLocaleDateString()}</div><div class="rt">${esc(r.text)}</div></div>`;
+  });
+  h+='</div>';
+  w.innerHTML=h;
+}
+
+// ═══════ INSTRUCTOR DASHBOARD ═══════
+function renderInsDash(){
+  const w=document.getElementById("dash-c"),sl=Object.entries(S.students);
+  const tQ=Object.values(S.chats).reduce((s,m)=>s+m.filter(x=>x.role==="user").length,0);
+  const aT={};Object.values(S.chats).forEach(ms=>ms.filter(m=>m.topic).forEach(m=>{aT[m.topic]=(aT[m.topic]||0)+1}));
+  const sT=Object.entries(aT).sort((a,b)=>b[1]-a[1]);
+  const tQz=Object.values(S.quiz).reduce((s,a)=>s+a.length,0);
+  const tR=Object.values(S.refs).reduce((s,a)=>s+a.length,0);
+  const tMsgs=Object.values(S.chats).reduce((s,m)=>s+m.length,0);
+
+  let h=`<div class="dtop"><div><h1>📊 Instructor Dashboard</h1><div class="ds">RAG Tutor · Learning Analytics · Dr. Kiavash Bahreini · FIU</div></div>
+    <button class="dbk" onclick="showScreen('chat')">← Back to Chat</button></div>`;
+
+  // Stats
+  h+=`<div class="sgrid">
+    ${[{n:sl.length,l:"Students",c:"#3b82f6",i:"👥"},{n:tQ,l:"Questions",c:"#22c55e",i:"💬"},{n:tMsgs,l:"Total Msgs",c:"#06b6d4",i:"📨"},{n:tQz,l:"Quizzes",c:"#f59e0b",i:"📝"},{n:tR,l:"Reflections",c:"#a855f7",i:"🪞"}].map(s=>`<div class="scard"><div class="si">${s.i}</div><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`).join("")}</div>`;
+
+  // Topic heatmap
+  h+=`<div class="dsec"><h3>🔥 Topic Frequency — Where Students Need Help Most</h3>`;
+  if(!sT.length)h+='<p class="emp">No data yet</p>';
+  else{const mx=sT[0][1];sT.slice(0,12).forEach(([t,c])=>{const pct=(c/mx)*100,col=pct>70?"#ef4444":pct>40?"#f59e0b":"#6366f1";h+=`<div class="brow"><span class="blbl">${esc(t)}</span><div class="btrk"><div class="bfil" style="width:${pct}%;background:linear-gradient(90deg,#3b82f6,${col})"></div></div><span class="bcnt" style="color:${col}">${c}</span></div>`})}
+  h+='</div>';
+
+  // Mastery distribution
+  h+=`<div class="dsec"><h3>🎯 Student Mastery Distribution</h3><div style="display:flex;gap:10px;flex-wrap:wrap">`;
+  const lvCounts=[0,0,0,0,0];
+  sl.forEach(([u])=>{const t=uTopics(u);lvCounts[overallLevel(t)]++});
+  LV.forEach((lv,i)=>{
+    const pct=sl.length?(lvCounts[i]/sl.length*100).toFixed(0):0;
+    h+=`<div style="flex:1;min-width:80px;background:#0f172a;border-radius:8px;padding:12px;text-align:center;border:1px solid ${LC[i]}40">
+      <div style="font-size:22px;font-weight:700;color:${LC[i]}">${lvCounts[i]}</div>
+      <div style="font-size:10px;color:${LC[i]};margin-top:2px">${lv}</div>
+      <div style="font-size:9px;color:#475569;margin-top:2px">${pct}%</div></div>`;
+  });
+  h+='</div></div>';
+
+  // Student table
+  h+=`<div class="dsec"><h3>👥 Student Activity Detail</h3>`;
+  if(!sl.length)h+='<p class="emp">No students</p>';
+  else{h+=`<table><thead><tr><th>Student</th><th>Level</th><th>Questions</th><th>Topics</th><th>Quizzes</th><th>Reflections</th><th>Last Active</th></tr></thead><tbody>`;
+    sl.forEach(([u,inf])=>{
+      const ms=S.chats[u]||[],qc=ms.filter(m=>m.role==="user").length,tc=Object.keys(uTopics(u)).length;
+      const qzc=(S.quiz[u]||[]).length,rc=(S.refs[u]||[]).length;
+      const oLvl=overallLevel(uTopics(u)),lastTs=ms.length?ms[ms.length-1].ts:inf.ts;
+      h+=`<tr><td><span style="font-weight:500">${esc(inf.fn||u)}</span><br><span style="font-size:10px;color:#64748b">@${esc(u)}</span></td>
+        <td><span style="color:${LC[oLvl]};font-weight:600;font-size:11px">${LV[oLvl]}</span></td>
+        <td style="color:#3b82f6;font-weight:600">${qc}</td><td style="color:#22c55e">${tc}</td>
+        <td style="color:#f59e0b">${qzc}</td><td style="color:#a855f7">${rc}</td>
+        <td style="font-size:10px;color:#64748b">${timeAgo(lastTs)}</td></tr>`;
+    });
+    h+='</tbody></table>'}
+  h+='</div>';
+
+  // Per-student topic breakdown
+  h+=`<div class="dsec"><h3>🗺️ Per-Student Topic Map</h3>`;
+  sl.forEach(([u,inf])=>{
+    const topics=uTopics(u),sorted=Object.entries(topics).sort((a,b)=>b[1]-a[1]);
+    if(!sorted.length)return;
+    h+=`<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:600;margin-bottom:6px">${esc(inf.fn||u)}</div><div style="display:flex;gap:4px;flex-wrap:wrap">`;
+    sorted.forEach(([t,c])=>{const lv=mIdx(c);h+=`<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${LC[lv]}20;color:${LC[lv]};border:1px solid ${LC[lv]}30">${esc(t)} ×${c}</span>`});
+    h+='</div></div>';
+  });
+  h+='</div>';
+
+  // Reflections
+  h+=`<div class="dsec"><h3>🪞 Recent Student Reflections</h3>`;
+  const allR=Object.entries(S.refs).flatMap(([u,rs])=>rs.map(r=>({...r,stu:u}))).sort((a,b)=>b.ts-a.ts).slice(0,8);
+  if(!allR.length)h+='<p class="emp">No reflections yet</p>';
+  else allR.forEach(r=>{h+=`<div class="rfc"><div class="rn">${esc(S.students[r.stu]?.fn||r.stu)} · ${new Date(r.ts).toLocaleDateString()}</div><div class="rt">${esc(r.text)}</div></div>`});
+  h+='</div>';
+  w.innerHTML=h;
+}
+
+// ═══════ EVENTS ═══════
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("ch-in").addEventListener("input",updSnd);
+  document.getElementById("ch-in").addEventListener("keydown",e=>{if(e.key==="Enter")sendMsg()});
+  document.getElementById("l-pass").addEventListener("keydown",e=>{if(e.key==="Enter")handleLogin()});
+  document.getElementById("mdl-sel").addEventListener("change",updBadge);
+  document.getElementById("ref-txt").addEventListener("input",()=>{const t=document.getElementById("ref-txt").value.trim();document.getElementById("ref-sub").className="msub "+(t?"on":"off")});
+  updBadge();
+});
+ldAll();
+</script>
+</body>
+</html>
