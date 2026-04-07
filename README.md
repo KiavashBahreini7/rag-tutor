@@ -1,5 +1,7 @@
 # RAG Tutor
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19447087.svg)](https://doi.org/10.5281/zenodo.19447087)
+
 **A Personalized AI Learning Assistant for Any Course, Any Discipline**
 
 > *"The best tutoring adapts to the learner — their pace, their gaps, their questions. RAG Tutor brings that to every student, in every subject, 24 hours a day."*
@@ -165,10 +167,9 @@ Any use, adaptation, presentation, or publication referencing this tool must inc
 
 **APA 7th Edition:**
 
-Bahreini, K. (2026). *RAG Tutor: A Personalized AI Learning Assistant* (Version 1.0) [Software]. Knight Foundation School of Computing and Information Sciences, Florida International University. kbahrein@fiu.edu. https://github.com/KiavashBahreini7/rag-tutor
+Bahreini, K. (2026). *RAG Tutor: A Personalized AI Learning Assistant* (Version 1.0) [Software]. Knight Foundation School of Computing and Information Sciences, Florida International University. kbahrein@fiu.edu. https://doi.org/10.5281/zenodo.19447087
 
 **BibTeX:**
-
 ```bibtex
 @software{bahreini2026ragtutor,
   author       = {Bahreini, Kiavash},
@@ -177,6 +178,7 @@ Bahreini, K. (2026). *RAG Tutor: A Personalized AI Learning Assistant* (Version 
   version      = {1.0},
   institution  = {KFSCIS, Florida International University},
   email        = {kbahrein@fiu.edu},
+  doi          = {10.5281/zenodo.19447087},
   url          = {https://github.com/KiavashBahreini7/rag-tutor},
   license      = {CC BY 4.0}
 }
@@ -184,13 +186,13 @@ Bahreini, K. (2026). *RAG Tutor: A Personalized AI Learning Assistant* (Version 
 
 **Chicago:**
 
-Bahreini, Kiavash. 2026. *RAG Tutor: A Personalized AI Learning Assistant.* Version 1.0. Software. Knight Foundation School of Computing and Information Sciences, Florida International University. https://github.com/KiavashBahreini7/rag-tutor
+Bahreini, Kiavash. 2026. *RAG Tutor: A Personalized AI Learning Assistant.* Version 1.0. Software. Knight Foundation School of Computing and Information Sciences, Florida International University. https://doi.org/10.5281/zenodo.19447087
 
 ---
 
 ## Disclaimer
 
-This software is provided "as is", without warranty of any kind. This tool relies on third-party AI services (Google Gemini API) which are subject to their own terms of service and availability. The author makes no guarantees regarding the accuracy or reliability of AI-generated responses. Users are responsible for verifying all information provided by the tool.
+This software is provided "as is", without warranty of any kind. This tool relies on third-party AI services (Google Gemini API), which are subject to their own terms of service and availability. The author makes no guarantees regarding the accuracy or reliability of AI-generated responses. Users are responsible for verifying all information provided by the tool.
 
 ---
 
