@@ -53,7 +53,7 @@ Bahreini, K. (2026). RAG Tutor: A Personalized AI Learning Assistant
 (Version 1.0) [Software]. Knight Foundation School of Computing and
 Information Sciences, Florida International University.
 kbahrein@fiu.edu
-https://github.com/KiavashBahreini7/rag-tutor
+https://doi.org/10.5281/zenodo.19447087
 
 BibTeX:
 
@@ -64,6 +64,7 @@ BibTeX:
   version      = {1.0},
   institution  = {KFSCIS, Florida International University},
   email        = {kbahrein@fiu.edu},
+  doi          = {10.5281/zenodo.19447087},
   url          = {https://github.com/KiavashBahreini7/rag-tutor},
   license      = {CC BY 4.0}
 }
