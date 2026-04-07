@@ -2,7 +2,7 @@
 
 **A Personalized AI Learning Assistant for Any Course, Any Discipline**
 
-> \*"The best tutoring adapts to the learner — their pace, their gaps, their questions. RAG Tutor brings that to every student, in every subject, 24 hours a day."\*
+> \\\*"The best tutoring adapts to the learner — their pace, their gaps, their questions. RAG Tutor brings that to every student, in every subject, 24 hours a day."\\\*
 
 **Kiavash Bahreini, Ph.D., IEEE Senior Member**
 Associate Teaching Professor, Computer Science
@@ -153,11 +153,11 @@ For advanced customization, you can modify the system prompts in the HTML file t
 
 |File|Description|
 |-|-|
-|`RAG\_Tutor.html`|The tool — open in any browser|
-|`RAG\_Tutor\_Faculty\_Guide.docx`|Complete faculty guide: setup, API key, features, dashboards, models|
+|`RAG\\\_Tutor.html`|The tool — open in any browser|
+|`RAG\\\_Tutor\\\_Faculty\\\_Guide.docx`|Complete faculty guide: setup, API key, features, dashboards, models|
 |`LICENSE.txt`|CC BY 4.0 license with required citation|
 |`README.md`|This file|
-|`qr\_code.png`|QR code linking to this repository|
+|`qr\\\_code.png`|QR code linking to this repository|
 
 \---
 
@@ -190,7 +190,9 @@ Bahreini, Kiavash. 2026. *RAG Tutor: A Personalized AI Learning Assistant.* Vers
 
 \---
 
-\## Disclaimer
+
+
+## Disclaimer
 
 
 
