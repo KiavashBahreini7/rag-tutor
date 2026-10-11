@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RAG Tutor v1.0 — Personalized AI Learning Assistant — Dr. Kiavash Bahreini, FIU</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- ① RENDERING LIBS — must come before the app script -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/mhchem.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'IBM Plex Sans',sans-serif;background:#0f172a;color:#f1f5f9;overflow:hidden;height:100vh}
@@ -68,12 +76,17 @@ button{cursor:pointer}button:disabled{cursor:default;opacity:.5}
 /* ── CHAT MESSAGES ── */
 .chat-area{flex:1;overflow-y:auto;padding:16px 0}
 .msg-row{display:flex;padding:0 16px;margin-bottom:10px}.msg-row.user{justify-content:flex-end}.msg-row.bot{justify-content:flex-start}
-.msg-b{max-width:75%;padding:10px 14px;line-height:1.6;font-size:13px;white-space:pre-wrap;word-wrap:break-word}
+/* ② white-space: normal for rendered MD, pre-wrap for plain text */
+.msg-b{max-width:78%;padding:10px 14px;line-height:1.6;font-size:13px;white-space:normal;word-wrap:break-word}
+.msg-b:not(.md){white-space:pre-wrap}
 .msg-b.user{background:#1e3a5f;border:1px solid rgba(37,99,235,.25);border-radius:14px 14px 4px 14px;color:#e2e8f0}
 .msg-b.bot{background:#1e293b;border:1px solid #334155;border-radius:14px 14px 14px 4px;color:#e2e8f0}
 .msg-b.quiz{background:#1a2e1a;border:1px solid rgba(34,197,94,.25);border-radius:14px 14px 14px 4px}
 .msg-b.refl{background:#2e1a2e;border:1px solid rgba(168,85,247,.25);border-radius:14px 14px 14px 4px}
-.msg-b .mi{font-size:13px;margin-right:5px}.msg-t{display:inline-block;margin-top:6px;font-size:9px;color:#64748b;background:#0f172a;padding:1px 7px;border-radius:6px}
+.msg-b.bot::before{content:"🎓 ";font-size:13px}
+.msg-b.quiz::before{content:"📝 ";font-size:13px}
+.msg-b.refl::before{content:"🪞 ";font-size:13px}
+.msg-b .msg-t{display:inline-block;margin-top:6px;font-size:9px;color:#64748b;background:#0f172a;padding:1px 7px;border-radius:6px}
 .welcome{text-align:center;padding:50px 20px;color:#475569}
 .welcome .emoji{font-size:44px;margin-bottom:10px}.welcome h2{font-size:14px;font-weight:500;color:#94a3b8}
 .welcome p{font-size:11px;margin-top:6px;max-width:380px;margin-left:auto;margin-right:auto;line-height:1.6}
@@ -85,6 +98,29 @@ button{cursor:pointer}button:disabled{cursor:default;opacity:.5}
 .sbtn{padding:10px 20px;border-radius:10px;border:none;font-weight:700;font-size:13px;color:#fff;transition:.15s}
 .sbtn.on{background:linear-gradient(135deg,#3b82f6,#6366f1)}.sbtn.off{background:#334155}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}.thinking-b{animation:pulse 1.5s infinite}
+
+/* ── MARKDOWN + KATEX STYLES ── */
+.msg-b.md>:first-child{margin-top:0}
+.msg-b.md>:last-child{margin-bottom:0}
+.msg-b.md p{margin:0 0 8px}
+.msg-b.md h1,.msg-b.md h2,.msg-b.md h3,.msg-b.md h4{font-size:14px;font-weight:700;margin:12px 0 6px;color:#f1f5f9}
+.msg-b.md ul,.msg-b.md ol{margin:0 0 8px;padding-left:20px}
+.msg-b.md li{margin:2px 0}
+.msg-b.md li>ul,.msg-b.md li>ol{margin:2px 0}
+.msg-b.md code{font-family:'IBM Plex Mono',monospace;font-size:12px;background:rgba(148,163,184,.15);padding:1px 5px;border-radius:4px;color:#fcd34d}
+.msg-b.md pre{background:#0b1220;border:1px solid #334155;border-radius:8px;padding:10px 12px;overflow-x:auto;margin:0 0 8px}
+.msg-b.md pre code{background:none;padding:0;font-size:12px;line-height:1.55;color:#e2e8f0}
+.msg-b.md table{border-collapse:collapse;font-size:12px;display:block;overflow-x:auto;margin:0 0 8px;max-width:100%}
+.msg-b.md th,.msg-b.md td{border:1px solid #334155;padding:5px 9px;text-align:left}
+.msg-b.md th{background:#0f172a;color:#94a3b8;font-weight:600}
+.msg-b.md blockquote{border-left:3px solid #3b82f6;padding:2px 0 2px 10px;margin:0 0 8px;color:#94a3b8}
+.msg-b.md hr{border:none;border-top:1px solid #334155;margin:10px 0}
+.msg-b.md a{color:#60a5fa;text-decoration:underline}
+.msg-b.md img{max-width:100%;border-radius:6px}
+.katex{font-size:1.05em}
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0;margin:6px 0}
+.math-err{color:#f87171}
+.msg-b.quiz.md p{color:#e2e8f0}
 
 /* ── MODAL ── */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:999}
@@ -330,7 +366,6 @@ function exTopic(q){
   const stop=new Set(["what","how","why","when","where","which","who","is","are","was","were","do","does","did","can","could","would","should","the","a","an","in","on","at","to","for","of","with","and","or","but","not","this","that","these","those","it","its","my","me","i","you","your","we","our","they","their","about","from","by","as","be","been","have","has","had","will","may","might","must","need","help","explain","describe","define","tell","give","show","make","please","example","difference","between","compare","understand","mean","work","use","know","think","some","more","very","also","just","like","really","much","way","get","got","any","each","most","other","than","then","into","over","such","only","take","come","made","after","back","many","well","good","new","used","first","last","long","great","little","own","old","right","big","high","three","four","five","two","one"]);
   const l=q.toLowerCase().replace(/[^a-z0-9\s]/g,"");
   const words=l.split(/\s+/).filter(w=>w.length>2&&!stop.has(w));
-  // Try 2-word phrases
   for(let i=0;i<words.length-1;i++){
     return (words[i].charAt(0).toUpperCase()+words[i].slice(1))+" "+(words[i+1].charAt(0).toUpperCase()+words[i+1].slice(1));
   }
@@ -342,6 +377,57 @@ function uTopics(u){const t={};(S.chats[u||S.user]||[]).filter(m=>m.topic).forEa
 function esc(s){const d=document.createElement("div");d.textContent=s;return d.innerHTML}
 function overallLevel(topics){const vals=Object.values(topics);if(!vals.length)return 0;const avg=vals.reduce((a,b)=>a+b,0)/vals.length;return mIdx(avg)}
 function timeAgo(ts){const d=Date.now()-ts,m=Math.floor(d/60000);if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.floor(m/60);if(h<24)return h+"h ago";return Math.floor(h/24)+"d ago"}
+
+// ═══════ MARKDOWN + LATEX RENDERER ═══════
+const TOKEN = i => `@@RAGTOKEN${i}@@`;
+
+function mathHTML(tex, display){
+  try{
+    return katex.renderToString(tex,{displayMode:display,throwOnError:false,strict:false,trust:false,output:"html"});
+  }catch(e){
+    return `<code class="math-err">${esc(tex)}</code>`;
+  }
+}
+
+function renderMD(src){
+  if(!window.marked || !window.katex) return null;
+  const stash=[];
+  const put = html => { stash.push(html); return TOKEN(stash.length-1); };
+
+  let s = String(src || "");
+
+  // 1) Code fences & inline code — protected from every later step
+  s = s.replace(/```([^\n`]*)\n?([\s\S]*?)```/g, (m,lang,code)=>{
+    const l = (lang||"").trim().split(/\s+/)[0];
+    const cls = l ? ` class="language-${esc(l)}"` : "";
+    return put(`<pre class="rt-pre"><code${cls}>${esc(code.replace(/\n$/,""))}</code></pre>`);
+  });
+  s = s.replace(/~~~([^\n`]*)\n?([\s\S]*?)~~~/g, (m,lang,code)=>
+    put(`<pre class="rt-pre"><code>${esc(code.replace(/\n$/,""))}</code></pre>`));
+  s = s.replace(/`([^`\n]+)`/g, (m,c)=>put(`<code class="rt-inline">${esc(c)}</code>`));
+
+  // 2) Math — display forms first, inline last
+  s = s.replace(/\$\$([\s\S]*?)\$\$/g, (m,t)=>put(mathHTML(t.trim(), true)));
+  s = s.replace(/\\\[([\s\S]*?)\\\]/g, (m,t)=>put(mathHTML(t.trim(), true)));
+  s = s.replace(/\\\(([\s\S]*?)\\\)/g, (m,t)=>put(mathHTML(t.trim(), false)));
+  s = s.replace(/(\\begin\{(equation\*?|align\*?|alignat\*?|gather\*?|multline\*?|array|matrix|pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|cases|split)\}[\s\S]*?\\end\{\2\})/g,
+                (m,t)=>put(mathHTML(t.trim(), true)));
+  s = s.replace(/\$([^\n$]+?)\$/g, (m,t)=>{
+    if(/^\s*\d+(\.\d+)?\s*$/.test(t)) return m;   // $5 / $10.50 → currency, not math
+    return put(mathHTML(t.trim(), false));
+  });
+
+  // 3) Markdown → HTML → sanitize
+  const parse = window.marked.parse || window.marked;
+  let html = parse(s, {gfm:true, breaks:true});
+  if(window.DOMPurify){
+    html = DOMPurify.sanitize(html, {USE_PROFILES:{html:true, mathMl:true, svg:true}});
+  }
+
+  // 4) Put real content back
+  html = html.replace(/@@RAGTOKEN(\d+)@@/g, (m,i)=>stash[+i] ?? m);
+  return html;
+}
 
 // ═══════ GEMINI API ═══════
 const ALL_MODELS=["gemini-2.5-flash","gemini-2.5-flash-lite","gemini-2.5-pro","gemini-3-flash-preview","gemini-3.1-flash-lite-preview","gemini-3.1-flash-live-preview"];
@@ -358,14 +444,11 @@ async function callAI(sys,msg){
   if(!key)return"⚠️ Please paste your Gemini API key in the blue banner above.\n\nGet a free key at: https://aistudio.google.com/apikey";
   const sel=document.getElementById("mdl-sel");
   const primary=sel.value;
-  // Try primary model first
   try{const r=await tryModel(key,primary,sys,msg);return r}catch(e){
     if(e.status===429||e.msg?.toLowerCase().includes("quota")){
-      // Auto-fallback: try other models
       const others=ALL_MODELS.filter(m=>m!==primary);
       for(const mdl of others){
         try{const r=await tryModel(key,mdl,sys,msg);
-          // Success! Switch dropdown to working model
           sel.value=mdl;updBadge();
           return`[Auto-switched to ${mdl}]\n\n${r}`;
         }catch(e2){continue}
@@ -416,7 +499,6 @@ function refreshSidebar(){
     {n:qCnt,l:"Questions",c:"#3b82f6"},{n:tCnt,l:"Topics",c:"#22c55e"},{n:(S.quiz[S.user]||[]).length,l:"Quizzes",c:"#f59e0b"}
   ].map(s=>`<div class="sb-stat"><div class="n" style="color:${s.c}">${s.n}</div><div class="l">${s.l}</div></div>`).join("");
 
-  // Topics with mastery bars
   const sorted=Object.entries(topics).sort((a,b)=>b[1]-a[1]);
   const maxC=sorted[0]?sorted[0][1]:1;
   let html='<div class="sb-sec"><h4>📚 Topic Mastery</h4>';
@@ -427,14 +509,12 @@ function refreshSidebar(){
   });
   html+='</div>';
 
-  // Recent questions
   const recent=msgs.filter(m=>m.role==="user").slice(-8).reverse();
   html+='<div class="sb-sec"><h4>💬 Recent Questions</h4>';
   if(!recent.length)html+='<p style="font-size:11px;color:#475569">No questions yet</p>';
   else recent.forEach(m=>{html+=`<div class="rq-item" title="${esc(m.content)}">${esc(m.content.substring(0,50))}${m.content.length>50?"...":""}</div>`});
   html+='</div>';
 
-  // Learning streak (last 7 days)
   html+='<div class="sb-sec"><h4>🔥 Activity (7 days)</h4><div class="streak-bar">';
   const now=Date.now();
   for(let i=6;i>=0;i--){
@@ -460,16 +540,31 @@ function refreshChat(){
   msgs.forEach(m=>addDOM(m));area.scrollTop=area.scrollHeight;
   refreshSidebar();updBadge();
 }
+
+/* ③ addDOM now renders assistant text as Markdown+LaTeX */
 function addDOM(m){
-  const area=document.getElementById("ch-area");const row=document.createElement("div");
+  const area=document.getElementById("ch-area");
+  const row=document.createElement("div");
   row.className="msg-row "+(m.role==="user"?"user":"bot");
   const bc=m.role==="user"?"user":(m.type==="quiz"?"quiz":(m.type==="refl"?"refl":"bot"));
-  const ic=m.role==="user"?"":(m.type==="quiz"?'<span class="mi">📝</span>':(m.type==="refl"?'<span class="mi">🪞</span>':'<span class="mi">🎓</span>'));
-  const tp=m.topic?`<div><span class="msg-t">${esc(m.topic)}</span></div>`:"";
-  row.innerHTML=`<div class="msg-b ${bc}">${ic}${esc(m.content)}${tp}</div>`;
-  area.appendChild(row);area.scrollTop=area.scrollHeight;
+
+  const box=document.createElement("div");
+  box.className="msg-b "+bc;
+
+  const html = m.role==="user" ? null : renderMD(m.content);
+  if(html!=null){ box.classList.add("md"); box.innerHTML=html; }
+  else { box.textContent = m.content; }   // plain-text fallback
+
+  if(m.topic){
+    const t=document.createElement("div");
+    t.innerHTML=`<span class="msg-t">${esc(m.topic)}</span>`;
+    box.appendChild(t);
+  }
+  row.appendChild(box);
+  area.appendChild(row);
+  area.scrollTop=area.scrollHeight;
 }
-function showThink(){const a=document.getElementById("ch-area"),d=document.createElement("div");d.className="msg-row bot thinking-row";d.id="think";d.innerHTML='<div class="msg-b bot thinking-b"><span class="mi">🎓</span>Thinking...</div>';a.appendChild(d);a.scrollTop=a.scrollHeight}
+function showThink(){const a=document.getElementById("ch-area"),d=document.createElement("div");d.className="msg-row bot thinking-row";d.id="think";d.innerHTML='<div class="msg-b bot thinking-b">Thinking...</div>';a.appendChild(d);a.scrollTop=a.scrollHeight}
 function hideThink(){const e=document.getElementById("think");if(e)e.remove()}
 function fillIn(t){document.getElementById("ch-in").value=t;document.getElementById("ch-in").focus();updSnd()}
 function updSnd(){const v=document.getElementById("ch-in").value.trim();document.getElementById("snd-btn").className="sbtn "+(v&&!S.busy?"on":"off")}
@@ -481,9 +576,10 @@ async function sendMsg(){
   const topic=exTopic(q),um={role:"user",content:q,topic,ts:Date.now()};
   if(!S.chats[S.user])S.chats[S.user]=[];S.chats[S.user].push(um);addDOM(um);showThink();
   const topics=uTopics(),tSum=Object.entries(topics).map(([t,c])=>`${t}:${c}q(${LV[mIdx(c)]})`).join(", "),rec=S.chats[S.user].filter(m=>m.role==="user").slice(-5).map(m=>m.content).join("; "),nm=S.students[S.user]?.fn||S.user;
+  const mathRule = `\n\nFormatting rules: use Markdown for structure (headings, lists, tables, fenced code). Write ALL mathematics in LaTeX: inline as $...$ and display as $$...$$.`;
   let sys;
-  if(S.soc){sys=`You are "RAG Tutor", a Socratic AI tutor created by Dr. Kiavash Bahreini at Florida International University.\n\nSOCRATIC MODE ON — NEVER give direct answers:\n1. Ask guiding questions to help the student discover the answer\n2. Build on partial understanding with follow-up questions\n3. Use analogies and examples to guide thinking\n4. Only confirm correct reasoning — do not provide it\n\nStudent: ${nm}\nTopics studied so far: ${tSum||"None yet"}\nRecent questions: ${rec||"First question"}\n\nBe encouraging but firm. Guide, don't tell. Adapt to whatever subject the student is asking about.`}
-  else{sys=`You are "RAG Tutor", a friendly and knowledgeable AI tutor created by Dr. Kiavash Bahreini at Florida International University.\n\nProvide clear, accurate, and well-structured explanations. Use examples, analogies, and code snippets where appropriate. Adapt your language and depth to the student's level.\n\nStudent: ${nm}\nTopics studied: ${tSum||"None yet"}\nRecent questions: ${rec||"First session"}\nCurrent mastery for "${topic}": ${LV[mIdx(topics[topic]||0)]}\n\nAdapt depth to their demonstrated level. You can teach any subject — respond based on what the student asks about.`}
+  if(S.soc){sys=`You are "RAG Tutor", a Socratic AI tutor created by Dr. Kiavash Bahreini at Florida International University.\n\nSOCRATIC MODE ON — NEVER give direct answers:\n1. Ask guiding questions to help the student discover the answer\n2. Build on partial understanding with follow-up questions\n3. Use analogies and examples to guide thinking\n4. Only confirm correct reasoning — do not provide it\n\nStudent: ${nm}\nTopics studied so far: ${tSum||"None yet"}\nRecent questions: ${rec||"First question"}\n\nBe encouraging but firm. Guide, don't tell. Adapt to whatever subject the student is asking about.`+mathRule}
+  else{sys=`You are "RAG Tutor", a friendly and knowledgeable AI tutor created by Dr. Kiavash Bahreini at Florida International University.\n\nProvide clear, accurate, and well-structured explanations. Use examples, analogies, and code snippets where appropriate. Adapt your language and depth to the student's level.\n\nStudent: ${nm}\nTopics studied: ${tSum||"None yet"}\nRecent questions: ${rec||"First session"}\nCurrent mastery for "${topic}": ${LV[mIdx(topics[topic]||0)]}\n\nAdapt depth to their demonstrated level. You can teach any subject — respond based on what the student asks about.`+mathRule}
   const resp=await callAI(sys,q);hideThink();
   const bm={role:"assistant",content:resp,topic,ts:Date.now()};S.chats[S.user].push(bm);addDOM(bm);svAll();
   S.qc++;S.busy=false;updSnd();refreshSidebar();
@@ -495,7 +591,7 @@ function togSoc(){S.soc=!S.soc;const b=document.getElementById("soc-btn");b.clas
 // ═══════ QUIZ ═══════
 async function genQuiz(){if(S.busy)return;S.busy=true;showThink();
   const topics=uTopics(),top=Object.entries(topics).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t])=>t),qt=top[0]||"the student's course material";
-  const sys=`Generate exactly 3 multiple-choice quiz questions about "${qt}". Format:\n\nQ1: [question]\nA) ...\nB) ...\nC) ...\nD) ...\nAnswer: [letter]\nExplanation: [brief]\n\nAdapt difficulty to intermediate level. Include relevant examples, diagrams in text, or code snippets if the topic calls for it.`;
+  const sys=`Generate exactly 3 multiple-choice quiz questions about "${qt}". Format:\n\nQ1: [question]\nA) ...\nB) ...\nC) ...\nD) ...\nAnswer: [letter]\nExplanation: [brief]\n\nAdapt difficulty to intermediate level. Include relevant examples, diagrams in text, or code snippets if the topic calls for it. Use Markdown for structure and $...$ / $$...$$ for any mathematics.`;
   const r=await callAI(sys,`Quiz on ${qt}`);hideThink();
   const qm={role:"assistant",content:r,type:"quiz",topic:qt,ts:Date.now()};
   if(!S.chats[S.user])S.chats[S.user]=[];S.chats[S.user].push(qm);addDOM(qm);
@@ -523,11 +619,9 @@ function renderStuDash(){
     <div class="sd-info"><h2>${esc(info?.fn||S.user)}</h2><div class="sdl" style="color:${LC[oLvl]}">Overall: ${LV[oLvl]} · Member since ${new Date(info?.ts||Date.now()).toLocaleDateString()}</div></div></div>
     <button class="dbk" onclick="showScreen('chat')">← Back to Chat</button></div>`;
 
-  // Stats
   h+=`<div class="sd-grid">
     ${[{n:qCnt,l:"Questions",c:"#3b82f6",i:"💬"},{n:tCnt,l:"Topics",c:"#22c55e",i:"📚"},{n:qzCnt,l:"Quizzes",c:"#f59e0b",i:"📝"},{n:rfCnt,l:"Reflections",c:"#a855f7",i:"🪞"}].map(s=>`<div class="sd-card"><div class="si">${s.i}</div><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`).join("")}</div>`;
 
-  // Mastery ring + Topic details
   h+=`<div style="display:grid;grid-template-columns:200px 1fr;gap:20px;margin-bottom:20px">`;
   h+=`<div class="dsec" style="text-align:center"><h3>Overall Mastery</h3>
     <div class="mastery-ring"><svg width="100" height="100"><circle cx="50" cy="50" r="42" fill="none" stroke="#334155" stroke-width="8"/><circle cx="50" cy="50" r="42" fill="none" stroke="${LC[oLvl]}" stroke-width="8" stroke-dasharray="${totalMastery*2.64} ${264-totalMastery*2.64}" stroke-linecap="round"/></svg>
@@ -543,7 +637,6 @@ function renderStuDash(){
   });
   h+='</div></div>';
 
-  // Recent History
   h+=`<div class="dsec"><h3>💬 Conversation History</h3>`;
   const recent=msgs.filter(m=>m.role==="user").slice(-15).reverse();
   if(!recent.length)h+='<p class="emp">No conversations yet</p>';
@@ -552,7 +645,6 @@ function renderStuDash(){
   });
   h+='</div>';
 
-  // Reflections
   const refs=S.refs[S.user]||[];
   h+=`<div class="dsec"><h3>🪞 My Reflections</h3>`;
   if(!refs.length)h+='<p class="emp">Complete 3+ questions in a session to unlock reflections</p>';
@@ -576,17 +668,14 @@ function renderInsDash(){
   let h=`<div class="dtop"><div><h1>📊 Instructor Dashboard</h1><div class="ds">RAG Tutor · Learning Analytics · Dr. Kiavash Bahreini · FIU</div></div>
     <button class="dbk" onclick="showScreen('chat')">← Back to Chat</button></div>`;
 
-  // Stats
   h+=`<div class="sgrid">
     ${[{n:sl.length,l:"Students",c:"#3b82f6",i:"👥"},{n:tQ,l:"Questions",c:"#22c55e",i:"💬"},{n:tMsgs,l:"Total Msgs",c:"#06b6d4",i:"📨"},{n:tQz,l:"Quizzes",c:"#f59e0b",i:"📝"},{n:tR,l:"Reflections",c:"#a855f7",i:"🪞"}].map(s=>`<div class="scard"><div class="si">${s.i}</div><div class="sn" style="color:${s.c}">${s.n}</div><div class="sl">${s.l}</div></div>`).join("")}</div>`;
 
-  // Topic heatmap
   h+=`<div class="dsec"><h3>🔥 Topic Frequency — Where Students Need Help Most</h3>`;
   if(!sT.length)h+='<p class="emp">No data yet</p>';
   else{const mx=sT[0][1];sT.slice(0,12).forEach(([t,c])=>{const pct=(c/mx)*100,col=pct>70?"#ef4444":pct>40?"#f59e0b":"#6366f1";h+=`<div class="brow"><span class="blbl">${esc(t)}</span><div class="btrk"><div class="bfil" style="width:${pct}%;background:linear-gradient(90deg,#3b82f6,${col})"></div></div><span class="bcnt" style="color:${col}">${c}</span></div>`})}
   h+='</div>';
 
-  // Mastery distribution
   h+=`<div class="dsec"><h3>🎯 Student Mastery Distribution</h3><div style="display:flex;gap:10px;flex-wrap:wrap">`;
   const lvCounts=[0,0,0,0,0];
   sl.forEach(([u])=>{const t=uTopics(u);lvCounts[overallLevel(t)]++});
@@ -599,7 +688,6 @@ function renderInsDash(){
   });
   h+='</div></div>';
 
-  // Student table
   h+=`<div class="dsec"><h3>👥 Student Activity Detail</h3>`;
   if(!sl.length)h+='<p class="emp">No students</p>';
   else{h+=`<table><thead><tr><th>Student</th><th>Level</th><th>Questions</th><th>Topics</th><th>Quizzes</th><th>Reflections</th><th>Last Active</th></tr></thead><tbody>`;
@@ -616,7 +704,6 @@ function renderInsDash(){
     h+='</tbody></table>'}
   h+='</div>';
 
-  // Per-student topic breakdown
   h+=`<div class="dsec"><h3>🗺️ Per-Student Topic Map</h3>`;
   sl.forEach(([u,inf])=>{
     const topics=uTopics(u),sorted=Object.entries(topics).sort((a,b)=>b[1]-a[1]);
@@ -627,7 +714,6 @@ function renderInsDash(){
   });
   h+='</div>';
 
-  // Reflections
   h+=`<div class="dsec"><h3>🪞 Recent Student Reflections</h3>`;
   const allR=Object.entries(S.refs).flatMap(([u,rs])=>rs.map(r=>({...r,stu:u}))).sort((a,b)=>b.ts-a.ts).slice(0,8);
   if(!allR.length)h+='<p class="emp">No reflections yet</p>';
